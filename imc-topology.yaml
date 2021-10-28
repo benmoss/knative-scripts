@@ -1,35 +1,29 @@
-apiVersion: rabbitmq.com/v1beta1
-kind: RabbitmqCluster
+apiVersion: v1
+kind: Namespace
 metadata:
-  name: cluster
-  namespace: default
-spec:
-  replicas: 1
+  name: imc
 ---
 apiVersion: eventing.knative.dev/v1
 kind: Broker
 metadata:
   name: default
+  namespace: imc
   annotations:
-    eventing.knative.dev/broker.class: RabbitMQBroker
+    eventing.knative.dev/broker.class: MTChannelBasedBroker
 spec:
-  config:
-    apiVersion: rabbitmq.com/v1beta1
-    kind: RabbitmqCluster
-    name: cluster
   delivery:
     deadLetterSink:
       ref:
         apiVersion: serving.knative.dev/v1
         kind: Service
         name: subscriber
-        namespace: default
+        namespace: imc
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: subscriber
-  namespace: default
+  namespace: imc
 spec:
   template:
     spec:
@@ -40,26 +34,17 @@ apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
   name: default
-  namespace: default
+  namespace: imc
 spec:
   broker: default
-  filter:
-    attributes:
-      foo: bar
   subscriber:
     uri: https://dev.null
-  delivery:
-    deadLetterSink:
-      ref:
-        apiVersion: serving.knative.dev/v1
-        kind: Service
-        name: subscriber
-        namespace: default
 ---
 apiVersion: sources.knative.dev/v1
 kind: ContainerSource
 metadata:
   name: heartbeats
+  namespace: imc
 spec:
   template:
     spec:
@@ -78,3 +63,4 @@ spec:
       apiVersion: eventing.knative.dev/v1
       kind: Broker
       name: default
+      namespace: imc
