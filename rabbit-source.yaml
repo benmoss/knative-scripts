@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rabbitsource
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: cluster
+  namespace: rabbitsource
+spec:
+  replicas: 1
+---
+apiVersion: sources.knative.dev/v1alpha1
+kind: RabbitmqSource
+metadata:
+  name: rabbitmq-source
+  namespace: rabbitsource
+spec:
+  brokers: "cluster.rabbitsource:5672/"
+  topic: ""
+  user:
+    secretKeyRef:
+      name: "cluster-default-user"
+      key: "username"
+  password:
+    secretKeyRef:
+      name: "cluster-default-user"
+      key: "password"
+  exchange_config:
+    type: "fanout"
+    durable: true
+    auto_deleted: false
+    internal: false
+    nowait: false
+  queue_config:
+    name: ""
+    routing_key: ""
+    durable: false
+    delete_when_unused: false
+    exclusive: false
+    nowait: false
+  sink:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: subscriber
+      namespace: default
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: subscriber
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/knative-releases/knative.dev/eventing/cmd/event_display
