@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: rabbitbroker
+  name: rmqbroker
 ---
 apiVersion: rabbitmq.com/v1beta1
 kind: RabbitmqCluster
 metadata:
   name: cluster
-  namespace: rabbitbroker
+  namespace: rmqbroker
 spec:
   replicas: 1
 ---
@@ -15,7 +15,7 @@ apiVersion: eventing.knative.dev/v1
 kind: Broker
 metadata:
   name: default
-  namespace: rabbitbroker
+  namespace: rmqbroker
   annotations:
     eventing.knative.dev/broker.class: RabbitMQBroker
 spec:
@@ -23,13 +23,13 @@ spec:
     apiVersion: rabbitmq.com/v1beta1
     kind: RabbitmqCluster
     name: cluster
-    namespace: rabbitbroker
+    namespace: rmqbroker
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: subscriber
-  namespace: rabbitbroker
+  namespace: rmqbroker
 spec:
   template:
     spec:
@@ -40,7 +40,7 @@ apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
   name: default
-  namespace: rabbitbroker
+  namespace: rmqbroker
 spec:
   broker: default
   subscriber:
@@ -48,13 +48,13 @@ spec:
       apiVersion: serving.knative.dev/v1
       kind: Service
       name: subscriber
-      namespace: rabbitbroker
+      namespace: rmqbroker
 ---
 apiVersion: sources.knative.dev/v1
 kind: ContainerSource
 metadata:
   name: heartbeats
-  namespace: rabbitbroker
+  namespace: rmqbroker
 spec:
   template:
     spec:
@@ -67,10 +67,10 @@ spec:
             - name: POD_NAME
               value: "heartbeats"
             - name: POD_NAMESPACE
-              value: "rabbitbroker"
+              value: "rmqbroker"
   sink:
     ref:
       apiVersion: eventing.knative.dev/v1
       kind: Broker
       name: default
-      namespace: rabbitbroker
+      namespace: rmqbroker
